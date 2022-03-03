@@ -1,4 +1,4 @@
-﻿//Encryption Part 1 - Joshua Walsworth
+//Encryption Part 1 - Joshua Walsworth
 
 #include <cstdlib>
 #include <iostream>
@@ -35,8 +35,11 @@ int main(int argc, char** argv) {
     //Step 1 - A = gen(seed_A) ∈ R_q^l×l    Generates a pseudorandom matrix using seed A and SHAKE-128.
     //Using SHAKE128 from crypto++, this only generates a SHAKE128 hash, and not a psuedorandom matrix.
     //A = SHAKE128(seed_A)
+
+    /* Commenting out this line because it does not compile and thus needs further work
     SHAKE128 hash;
-    hash.Update((const byte*)seed_A.data(), seed_A.size());
+    //hash.Update((const byte*)seed_A.data(), seed_A.size());
+    */
 
     //Step 2 - if r is not specified then:      Checks if r has been passed as an argument.
     //Due to the incomplete nature of our project at this moment, our code is not organized enough 
