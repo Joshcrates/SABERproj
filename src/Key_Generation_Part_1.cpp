@@ -10,16 +10,18 @@
 #include <cmath>
 #include <random>
 
-#include "crypto++/shake.h"
+#include <cryptopp/shake.h>
+
+//#include "crypto++/shake.h"
 using CryptoPP::SHAKE128;
 
 
 using namespace std;
 
-int main(int argc, char** argv) {
+int KEY_GEN(int argc, char** argv) {
 
     //Step 1 - seed_A ← U({0,1}^256)        Generates a 256 byte seed consisting of 1s and 0s (Uniform).
-
+    printf("KEY_GEN\n");
     //setup to generate uniform distribution of 1s and 0s
     random_device rd;  //Will be used to obtain a seed for the random number engine
     mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
@@ -42,7 +44,7 @@ int main(int argc, char** argv) {
 
     SHAKE128 hash;
     //something wrong with this line below:
-    //hash.Update((const byte*)seed_A.data(), seed_A.size());
+    hash.Update((const CryptoPP::byte*)seed_A.data(), seed_A.size());
 
     //using the shake128 string, a matrix sized lxl is populated and set to variable A
     

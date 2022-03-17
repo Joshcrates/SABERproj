@@ -10,15 +10,16 @@
 #include <cmath>
 #include <random>
 
-#include "shake.h"
+#include <cryptopp/shake.h>
+
 using CryptoPP::SHAKE128;
 
 
 using namespace std;
 
-int main(int argc, char** argv) {
+int ENC(int argc, char** argv) {
 
-
+    printf("ENC\n");
     //setup to generate uniform distribution of 1s and 0s
     random_device rd;  //Will be used to obtain a seed for the random number engine
     mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
@@ -36,10 +37,10 @@ int main(int argc, char** argv) {
     //Using SHAKE128 from crypto++, this only generates a SHAKE128 hash, and not a psuedorandom matrix.
     //A = SHAKE128(seed_A)
 
-    /* Commenting out this line because it does not compile and thus needs further work
+    /* Commenting out this line because it does not compile and thus needs further work*/
     SHAKE128 hash;
-    //hash.Update((const byte*)seed_A.data(), seed_A.size());
-    */
+    hash.Update((const CryptoPP::byte*)seed_A.data(), seed_A.size());
+    
 
     //Step 2 - if r is not specified then:      Checks if r has been passed as an argument.
     //Due to the incomplete nature of our project at this moment, our code is not organized enough 
