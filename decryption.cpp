@@ -15,30 +15,13 @@ using namespace NTL;
 //s % p - 
 //R2 set of polynomials coefficents are less than 2 for example, 1 + x^2 + x^100     is in R_2
 
-int main0(void){
-    ZZ p(7);
-    ZZ_p::init(p);
+//Eq = 12
+//Ep = 10
+//Et = 3
 
-    long degree = 16;
-
-    ZZ_pX testPoly;
-    testPoly.SetLength(16);
-
-    SetCoeff(testPoly, 3,25); // 25 % 7 = 4
-
-    Vec<ZZ_pX> vector;
-    vector.SetLength(5);
-
-    ZZ_pX temp;
-
-    for(size_t i = 0 ; i < vector.length() ; i++){
-        random(vector[i], degree);
-        std::cout << vector[i] << '\n';
-    }
-
-return 0; 
-   // std::cout <<testPoly;
-}
+#define EQ 12
+#define EP 10
+#define ET 3
 
 int main(void){
     /* Line 1 */
@@ -46,8 +29,31 @@ int main(void){
     // b' s and c come from other steps 
     int l = 10; //TODO - figure out what this should be.
     constexpr int degree = 256; //TODO - Change to 256 Later
-    ZZ p(1024);
+    ZZ p(7);
     ZZ_p::init(p);
+
+    //ZZ constPow(128); // 2 ^ 7
+    ZZ_pX constPow(128);
+    std::cout<<constPow;
+// power(ZZ& x, long a, long e)
+
+    ZZ pow1; //=
+    ZZ pow2; //=
+    ZZ pow3; //=
+    power(pow1, 2,EP-1);
+    power(pow2,2,EP - ET - 1);
+    power(pow3,2,EQ - EP - 1);
+    
+    ZZ T(8);
+    
+    const ZZ h2Val = pow1 - pow2 + pow3;
+    ZZ_p h2Val_p;// = conv(h2Val);
+    conv(h2Val_p, h2Val);
+    ZZ_pX h2;
+
+    for(size_t i = 0 ; i<degree;i++){
+        SetCoeff(h2,i,h2Val_p);
+    }
 
     ZZ q;
     q = ZZ(4096);
@@ -80,8 +86,28 @@ int main(void){
     //  s % p
     v = v % polyMod;
 
-    std::cout <<"polyMod    " << polyMod << '\n';
-    std::cout << v <<'\n';
+    //std::cout <<"polyMod    " << polyMod << '\n';
+    //std::cout << v <<'\n';
+
+    ZZ_p::init(ZZ(8)); // 8 is T
+    ZZ_pX cm; // Get this from encryption (cypher text)
+    random(cm,degree);
+    std::cout << '\n';
+
+
+    ZZ_p::init(p);
+    ZZ_pX temp1;
+
+    temp1 = v - constPow * cm + h2;
+
+    ZZ_pX temp2;
+
+    for (size_t i = 0 ; i < degree; i++){
+       // temp2[i] = temp1[i] % p;
+       SetCoeff(temp2,i,ZZ_p(temp1[i]));
+    }
+
+    std::cout << temp2 <<'\n';
     
     return 0; 
     
