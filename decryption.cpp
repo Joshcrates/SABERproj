@@ -29,13 +29,12 @@ int main(void){
     // b' s and c come from other steps 
     int l = 10; //TODO - figure out what this should be.
     constexpr int degree = 256; //TODO - Change to 256 Later
-    ZZ p(7);
+    ZZ p(1024);
     ZZ_p::init(p);
 
     //ZZ constPow(128); // 2 ^ 7
     ZZ_pX constPow(128);
     std::cout<<constPow;
-// power(ZZ& x, long a, long e)
 
     ZZ pow1; //=
     ZZ pow2; //=
@@ -86,9 +85,6 @@ int main(void){
     //  s % p
     v = v % polyMod;
 
-    //std::cout <<"polyMod    " << polyMod << '\n';
-    //std::cout << v <<'\n';
-
     ZZ_p::init(ZZ(8)); // 8 is T
     ZZ_pX cm; // Get this from encryption (cypher text)
     random(cm,degree);
@@ -107,6 +103,14 @@ int main(void){
        SetCoeff(temp2,i,ZZ_p(temp1[i]));
     }
 
+    std::cout << temp2 <<'\n';
+    for(size_t i = 0 ; i < degree ; i++){
+        unsigned int temp3;
+        conv(temp3, temp2[i]);
+        temp3 >>= (EP-1);
+        temp2[i] = temp3;
+        //temp2[i] /= 512; // >> EP-1
+    }
     std::cout << temp2 <<'\n';
     
     return 0; 
