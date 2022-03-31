@@ -56,3 +56,24 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+void alg15() {
+    int l = 2;
+    int eq = 12;
+    int n = 256;
+    int length = l * l * n * eq / 8;
+    cout << length << endl;
+    CryptoPP::byte buf[1536];//1024*12/8 = 1536*8 = 12288 total bits
+    for(int i=0;i<1536;i++)
+        buf[i] = '0';
+    cout << buf[0] << buf[length - 1];
+
+    //goal: understand byte data type so I can sort them into bits
+    //goal: learn SHAKE-128 syntax to implement alg15 line 2
+    bool bufs[1024][12];//1024*12 = 12288 total bits
+    for (int i = 0; i < 1024; i++) {
+        bufs[i]=
+    }
+
+}
+
