@@ -15,12 +15,16 @@
 #include "crypto++/filters.h"
 using CryptoPP::SHAKE128;
 
+const int l = 2;
+const int n = 256;
+//const int q = exp(2,12);
 
 using namespace std;
 
 int main(int argc, char** argv) {
 
-    //Step 1 - seed_A ← U({0,1}^256)        Generates a 256 byte seed consisting of 1s and 0s (Uniform).
+    //Step 1 - seed_A ← U({0,1}^256)
+    //Generates a 256 byte seed consisting of 1s and 0s (Uniform).
 
     //setup to generate uniform distribution of 1s and 0s
     random_device rd;  //Will be used to obtain a seed for the random number engine
@@ -38,13 +42,14 @@ int main(int argc, char** argv) {
     }
     
 
-    //Step 2 - A = gen(seed_A) ∈ R_q^l×l    Generates a pseudorandom matrix using seed A and SHAKE-128.
+
+    //Step 2 - A = gen(seed_A) ∈ R_q^l×l    
+    //Generates a pseudorandom matrix using seed A and SHAKE-128.
 
     //Using SHAKE128 from crypto++, this only generates a SHAKE128 hash, and not a psuedorandom matrix.
     std::string digest;
 
     SHAKE128 hash;
-    //something wrong with this line below:
     hash.Update((const CryptoPP::byte*)seed_A.data(), seed_A.size());
     digest.resize(hash.DigestSize());
     hash.Final((CryptoPP::byte*)&digest[0]);
@@ -52,14 +57,30 @@ int main(int argc, char** argv) {
     CryptoPP::StringSource(digest, true);   //double check this part for proper arguments (encoder is currently default value)
 
     //using the shake128 string, a matrix sized lxl is populated and set to variable A
+    //Instantiate byte string object buf of length l2 × n × ϵq/8
+    vector<char> buf;
+    
+    //SHAKE-128(buf, l2 × n × ϵq/8, seedAAA, SABER SEEDBYTES)
+
+    //Split buf into l2 × n equal bit strings of bit length ϵq and obtain
+    //(bufl2n−1 ‖ . . . ‖ buf0) = buf
 
     //the matrix is 2 dimensional, so nested for loops are used
-    //for i in range l
-        //for j in range l
+    int k = 0;
+    for(int i_1 = 0; i_1 < l; i_1++) {
+        for(int i_2 = 0; i_2 < l; i_2++) {
+            for(int j = 0; j < n; j++) {
+                printf("x");
+            }
+        }
+    }
 
-    //Step 3 - r = U({0,1}^256)     Generates a 256 byte key consisting of 1s and 0s (Uniform distribution).
-    //The process is the same as step 1.
+
+
+    //Step 3 - r = U({0,1}^256)     
+    //Generates a 256 byte key consisting of 1s and 0s (Uniform distribution).
     
+    //The process is the same as step 1.
     vector<int> r;
     //loop to generate 256 bytes
     for(int i = 0; i < 256; i++) {
@@ -89,6 +110,6 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-
+//terminal arguments for compiling on Linux:
 //g++ -I/usr/local/include myprog1.cpp -o myprog1.out -L/usr/local/lib -lcryptopp
 //./myprog1.out 
