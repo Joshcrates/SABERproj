@@ -9,6 +9,7 @@
 #include <numeric>
 #include <cmath>
 #include <random>
+#include <bitset>
 
 #include "crypto++/cryptlib.h"
 #include "crypto++/shake.h"
@@ -17,7 +18,7 @@ using CryptoPP::SHAKE128;
 
 const int l = 2;
 const int n = 256;
-//const int q = exp(2,12);
+const int eq = 12;  //check later if 13 or 12
 
 using namespace std;
 
@@ -33,7 +34,7 @@ int main(int argc, char** argv) {
 
     //generate seed_A
     vector<int> seed_A;
-    //loop to generate 256 bytes
+    //loop to generate 256 bytes, DOUBLE CHECK THIS- SABER_SEEDBYTES SAYS 32
     for(int i = 0; i < 256; i++) {
         //loop to generate 8 bits for each byte
         for(int j = 0; j < 8; j++) {
@@ -56,27 +57,63 @@ int main(int argc, char** argv) {
 
     CryptoPP::StringSource(digest, true);   //double check this part for proper arguments (encoder is currently default value)
 
-    //using the shake128 string, a matrix sized lxl is populated and set to variable A
-    //Instantiate byte string object buf of length l2 × n × ϵq/8
-    vector<char> buf;
+    //using the shake128 string, a matrix sized lxl is populated and set to variable A:
+
+    //Matrix generation:
+    //Instantiate byte string object buf of length l^2 × n × ϵq/8
+    vector<char> buf(l*l*n*eq/8,'0');
     
-    //SHAKE-128(buf, l2 × n × ϵq/8, seedAAA, SABER SEEDBYTES)
+    //generate seed_B
+    vector<int> seed_B;
+    //loop to generate 256 bytes
+    for(int i = 0; i < l*l*n*eq/8; i++) {
+        //loop to generate 8 bits for each byte
+        for(int j = 0; j < 8; j++) {
+            seed_B.push_back(distrib(gen));
+        }
+    }
 
-    //Split buf into l2 × n equal bit strings of bit length ϵq and obtain
+    //SHAKE-128(buf, l^2 × n × ϵq/8, seedAAA, SABER SEEDBYTES)
+    hash.Update((const CryptoPP::byte*)seed_B.data(), seed_B.size());
+    //buf.resize(hash.DigestSize());
+    hash.Final((CryptoPP::byte*)&buf[0]);
+
+    CryptoPP::StringSource(&buf[0], true);
+    string buf_as_a_string(buf.begin(),buf.end());
+    cout << "buf_as_a_string size:" << buf_as_a_string.size() << endl;
+    cout << "seed_B size:"<< seed_B.size() << endl;
+
+    //Split buf into l^2 × n equal bit strings of bit length ϵq and obtain
     //(bufl2n−1 ‖ . . . ‖ buf0) = buf
+    vector<bitset<eq>> buf_splitted(l*l*n,'0');
+    for(int i = 0; i < l*l*n; i++) {
+        buf_splitted[i] = bitset<eq>(buf_as_a_string.c_str()[i]);
+    }
 
+    cout << buf_splitted[0] << endl;
+    cout << buf_splitted[l*l*n-1] << endl;  //check the bit/byte lengths, why are these all zeros?
+    //exit(0);
     //the matrix is 2 dimensional, so nested for loops are used
+    int matrix_A[l][l][n];
     int k = 0;
     for(int i_1 = 0; i_1 < l; i_1++) {
         for(int i_2 = 0; i_2 < l; i_2++) {
             for(int j = 0; j < n; j++) {
-                printf("x");
+                //printf("x");
+                //matrix_A[i_1][i_2][j] = 1;
+                matrix_A[i_1][i_2][j] = buf_splitted[k].to_ulong();
+                k++;
             }
         }
     }
 
-
-
+    for(int i_1 = 0; i_1 < l; i_1++) {
+        for(int i_2 = 0; i_2 < l; i_2++) {
+            cout << matrix_A[i_1][i_2] << " ";
+        } 
+        cout << endl;
+    }
+    //exit(0);
     //Step 3 - r = U({0,1}^256)     
     //Generates a 256 byte key consisting of 1s and 0s (Uniform distribution).
     
@@ -106,6 +143,12 @@ int main(int argc, char** argv) {
             }
     std::cout << std::endl;
 
+    //test shake128
+    std::cout << "Buf: ";
+    for (unsigned char c : buf){
+            printf("%x",c);        
+            }
+    std::cout << std::endl;
 
     return 0;
 }
