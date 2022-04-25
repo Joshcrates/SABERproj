@@ -1,0 +1,10 @@
+Building:
+Setup WSL, Cygwin, MSYS, or use some other Linux environment.
+Install the Crypto++ and NTL libraries from
+https://libntl.org/doc/tour-unix.html
+https://github.com/weidai11/cryptopp/blob/master/Install.txt
+
+Compile with a command similar to:
+gcc -O2 src.cpp -o out.elf -L/usr/local/lib -lcryptopp -lntl -lgmp -lm -pthread
+where src.cpp is the module you want to compile.
+Run the compiled program with ./out.elf
