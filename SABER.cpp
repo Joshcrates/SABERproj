@@ -250,7 +250,8 @@ int main(int argc, char** argv) {
     /* Line 1 */
     
     // b' s and c come from other steps 
-    int l = 13;
+    //TODO - something in Decryption is modifying matrix_A output
+    
     constexpr int degree = 256; //TODO - Change to 256 Later
     ZZ p(1024);
     ZZ_p::init(p);
@@ -326,7 +327,7 @@ int main(int argc, char** argv) {
        SetCoeff(temp2,i,ZZ_p(temp1[i]));
     }
 
-    std::cout << temp2 <<'\n';
+    //std::cout << temp2 <<'\n';
     for(size_t i = 0 ; i < degree ; i++){
         unsigned int temp3;
         conv(temp3, temp2[i]);
@@ -334,7 +335,7 @@ int main(int argc, char** argv) {
         temp2[i] = temp3;
         //temp2[i] /= 512; // >> EP-1
     }
-    std::cout << temp2 <<'\n';
+    //std::cout << temp2 <<'\n';
     
 
     //******************************TESTS******************************
@@ -407,6 +408,5 @@ int main(int argc, char** argv) {
 }
 
 //terminal arguments for compiling on Linux:
-//-L/usr/ntl-11.5.1/include/NTL -lNTL
-//g++ -I/usr/local/include SABER.cpp -o SABER.out -L/usr/local/lib -lcryptopp
+//g++ -I/usr/local/include SABER.cpp -o SABER.out -L/usr/local/lib -lcryptopp -lntl -lpthread
 //./SABER.out 
