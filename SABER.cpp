@@ -43,6 +43,9 @@ const int n = 256;
 const int eq = 13; 
 const int EP = 10;
 const int ET = 4;
+const int p = pow(2,10);
+const int q = pow(2,13);
+const int T = pow(2,ET); //table 2 page 12
 
 #define SABER_SEEDBYTES 32;
 
@@ -60,6 +63,9 @@ int main(int argc, char** argv) {
     random_device rd;  //Will be used to obtain a seed for the random number engine
     mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     uniform_int_distribution<> distrib(0, 1); //uniform distribution as specified by the algorithm
+
+    ZZ mod_p = ZZ(7);
+    ZZ_p::init(mod_p);
 
     //generate seed_A
     vector<int> seed_A;
@@ -115,6 +121,24 @@ int main(int argc, char** argv) {
         }
     }    
 
+    Mat<ZZ_pX> matrix_A_NTL;
+    matrix_A_NTL.SetDims(l,l);
+    k = 0;
+    for(int i_1 = 0; i_1 < l; i_1++) {
+        for(int i_2 = 0; i_2 < l; i_2++) {
+            for(int j = 0; j < n; j++) {
+                //matrix_A[i_1][i_2][j] = buf_splitted[k].to_ulong();
+                matrix_A_NTL[i_1][i_2].SetLength(l);
+                SetCoeff(matrix_A_NTL[i_1][i_2],j,ZZ_p(buf_splitted[k].to_ulong()));
+                k++;
+            }
+        }
+    }    
+
+    //cout << "Testing matrix A NTL: " << endl;
+    //cout << matrix_A_NTL[1][1] << endl;
+    //exit(0);
+
     //******************************STEP 3******************************
     //Step 3 - r = U({0,1}^256)     
     //Generates a 256 byte key consisting of 1s and 0s (Uniform distribution).
@@ -132,14 +156,15 @@ int main(int argc, char** argv) {
 
     //s = βμ(Rql×1 ; r)
 
-    /**
+    ZZ p2 = ZZ(7);
+    ZZ_p::init(p2);
     NTL::ZZ_pXMatrix poly;
     NTL::ZZ size = NTL::ZZ(1<<13);
     NTL::ZZ_p::init(size);
-    vector<NTL::ZZ_pX> s;
-    int i, j;
+    Vec<NTL::ZZ_pX> s2;
+    s2.SetLength(l);
     NTL::zz_pX z;
-    **/
+    
 
     //step 4 (NTL was acting weird so I just used an array to represent the polynomial)
     default_random_engine gen2(0);
@@ -153,9 +178,61 @@ int main(int argc, char** argv) {
         }
     }
 
+    k = 0;
+    for (i = 0; i < l; i++) {
+        for (j = 0; j < n; j++) {
+            //we need to implement s[i][j] = HammingWeight(bufk) − HammingWeight(bufk+1) mod q
+            ZZ_p temp = ZZ_p(buf_splitted[k].count()-buf_splitted[k+1].count()); //check if count returns hamming weight of bitset
+            SetCoeff(s2[i],j,temp); //s2 is the final secret key
+            k = k + 2;
+        }
+    }
+
+    //cout << "Testing s2[l-1]" << endl;
+    //cout << s2[l-1] << endl;
+    //exit(0);
+
     
     //******************************STEP 5******************************
     //b = ((A^T s + h) mod q) >> (eq − ep) ∈ Rpl×1
+
+    ZZ_p::init(ZZ(q));
+
+    //Spec page 8: vector h is made up of h1
+    const ZZ h1Val = ZZ(eq - EP - 1);
+    ZZ_p h1Val_p;// = conv(h2Val);
+    conv(h1Val_p, h1Val);
+    ZZ_pX h1;
+
+    for(size_t i = 0 ; i<n;i++){ //n = degree
+        SetCoeff(h1,i,h1Val_p);
+    }
+
+    Vec<ZZ_pX>h_vec;
+    h_vec.SetLength(l);
+
+    for(size_t i = 0 ; i<l;i++){
+        h_vec[i] = h1;
+    }
+
+    Vec<ZZ_pX> b_vec;
+    b_vec.SetLength(l);
+
+    for (i = 0; i < l; i++) {
+        for (j = 0; j < l; j++) {
+            b_vec[i] = matrix_A_NTL[j][i]*s2[i] + h_vec[i];
+        }
+    }
+
+    for (i = 0; i < l; i++) {
+        for (j = 0; j < l; j++) {
+            //b_vec[i] >> (eq - EP);
+            unsigned int temp3;
+            conv(temp3, b_vec[i][j]);
+            temp3 >>= (eq - EP);
+            b_vec[i][j] = temp3;
+        }
+    }
 
     //step 5
     // I also had to generate A randomly because step 2 is not fully implemented
@@ -218,12 +295,16 @@ int main(int argc, char** argv) {
             }
         }
     }
+
+    //Vec<NTL::ZZ_pX> b;
+    //b.SetLength(l);
     
     //******************************STEP 6******************************
-    //return (pk := (seedA, b), s)
+    //return (pk := (seedA, b), s) (seed_A, b_vec, s2)
 
     //****************************ENCRYPTION****************************
     
+    /**
     int length = l * l * n * eq / 8;
     //cout << length << endl;
     CryptoPP::byte buf3[1536];//1024*12/8 = 1536*8 = 12288 total bits
@@ -238,7 +319,99 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 1024; i++) {
         bufs[i][0]= 0; //placeholder assignment
     }
-    
+    **/
+
+    //We already have lines 1-3 from previous KeyGen part.
+
+    //******************************STEP 4******************************
+    //s′ = βμ(Rl×1q ; r)
+
+    Vec<NTL::ZZ_pX> s_prime;
+    s_prime.SetLength(l);
+
+    k = 0;
+    for (i = 0; i < l; i++) {
+        for (j = 0; j < n; j++) {
+            //we need to implement s[i][j] = HammingWeight(bufk) − HammingWeight(bufk+1) mod q
+            ZZ_p temp = ZZ_p(buf_splitted[k].count()-buf_splitted[k+1].count()); //check if count returns hamming weight of bitset
+            SetCoeff(s_prime[i],j,temp); 
+            k = k + 2;
+        }
+    }
+
+    //******************************STEP 5******************************
+    //b′ = ((As′ + h) mod q) >> (Eq − Ep) ∈ Rl×1p
+
+    Vec<ZZ_pX> b_vec_prime;
+    b_vec_prime.SetLength(l);
+
+    //this one is not transposed
+    for (i = 0; i < l; i++) {
+        for (j = 0; j < l; j++) {
+            b_vec_prime[i] = matrix_A_NTL[i][j]*s_prime[i] + h_vec[i];
+        }
+    }
+
+    for (i = 0; i < l; i++) {
+        for (j = 0; j < l; j++) {
+            //b_vec[i] >> (eq - EP);
+            unsigned int temp3;
+            conv(temp3, b_vec_prime[i][j]);
+            temp3 >>= (eq - EP);
+            b_vec_prime[i][j] = temp3;
+        }
+    }
+
+
+    //******************************STEP 6******************************
+    //v′ = b^T (s′ mod p) ∈ Rp
+
+    ZZ_p::init(ZZ(p));
+    ZZ_pX v_prime;
+
+    for (i = 0; i < l; i++) {
+        v_prime = b_vec_prime[i]*s_prime[i];
+    }
+
+    //******************************STEP 7******************************
+    //c_m = (v′ + h1 − 2^(Ep−1)m mod p) >> (Ep − ET ) ∈ RT
+    //c_m polynomial coefficients must be less than T = 8 for lightSABER, table 2 page 12
+
+    ZZ_p::init(ZZ(2));
+    ZZ_pX m; //this is the message m
+    random(m, n);
+
+    ZZ_p::init(ZZ(p));
+    ZZ_pX temp_poly;
+    temp_poly.SetLength(n);
+
+    for (i = 0; i < n; i++) {
+        SetCoeff(temp_poly, i, ZZ_p(pow(2,EP-1)*m[i]));
+    }
+
+    ZZ_pX c_m;
+    //c_m = (v_prime + h1 - temp_poly) >> (EP - ET);
+    c_m = (v_prime + h1 - temp_poly);
+
+    for(size_t i = 0 ; i < n ; i++){
+        unsigned int temp3;
+        conv(temp3, c_m[i]);
+        temp3 >>= (EP-ET);
+        c_m[i] = temp3;
+        //temp2[i] /= 512; // >> EP-1
+    }
+
+    //this is only adjusting the first 256 values to below T, all values must be below T
+    for(size_t i = 0 ; i < n ; i++){
+        long temp3;
+        conv(temp3, c_m[i]);
+        temp3 = temp3 % T;
+        c_m[i] = temp3;
+        //temp2[i] /= 512; // >> EP-1
+    }
+
+    //******************************STEP 8******************************
+    //return c := (cm, b′)
 
     //****************************DECRYPTION****************************
     //s - Vector of L polynomials From Rq (same as Rp but with q as the p)
@@ -268,7 +441,7 @@ int main(int argc, char** argv) {
     power(pow3,2,eq - EP - 1);
     
     ZZ T(8);
-    
+
     const ZZ h2Val = pow1 - pow2 + pow3;
     ZZ_p h2Val_p;// = conv(h2Val);
     conv(h2Val_p, h2Val);
