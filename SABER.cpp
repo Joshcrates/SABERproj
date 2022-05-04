@@ -234,68 +234,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    //step 5
-    // I also had to generate A randomly because step 2 is not fully implemented
-    int A[16][16][64], newA[16][16][64] = { 0 }, temp[16][16][64] = { 0 };
-    for (i = 0; i < 16; i++) {
-        for (j = 0; j < 16; j++) {
-            for (k = 0; k < l; k++) {
-                A[i][j][k] = (binomial(gen2) % (1 << 13));
-                newA[i][j][k] = A[i][j][k];
-            }
-        }
-    }
-
-    int h, i2, j2, k1, k2;
-    //multiply A by itself 2^4 times and then by s (should probably get NTL working first)
-    for (h = 0; h < 15; h++) {
-        //multiply matrices
-        for (i = 0; i < 16; i++)
-            for (j = 0; j < 16; j++)
-                for (i2 = 0; i2 < 16; i2++)
-                    for (j2 = 0; j2 < 16; j2++)
-                        for (k1 = 0; k1 < 32; k1++)
-                            for (k2 = 0; k2 < l; k2++) {
-                                temp[i][j][k1 + k2] += newA[i2][j][k1] * A[i][j2][k2];
-                                temp[i][j][k1 + k2] %= 1 << 13;
-                            }
-
-        //set newA to temp and clear temp
-        for (i = 0; i < 16; i++)
-            for (j = 0; j < 16; j++)
-                for (k = 0; k < (l + 2 * h); k++) {
-                    newA[i][j][k] = temp[i][j][k];
-                    temp[i][j][k] = 0;
-                }
-    }
-    //multiply by s
-    for (i = 0; i < 16; i++)
-        for (j = 0; j < 16; j++)
-            for (i2 = 0; i2 < 16; i2++)
-                for (j2 = 0; j2 < 16; j2++)
-                    for (k1 = 0; k1 < 32; k1++)
-                        for (k2 = 0; k2 < l; k2++) {
-                            temp[i][j][k1 + k2] += newA[i2][j][k1] * s[i][j2][k2];
-                            temp[i][j][k1 + k2] %= 1 << 13;
-                        }
-    for (i = 0; i < 16; i++)
-        for (j = 0; j < 16; j++)
-            for (k = 0; k < 64; k++) {
-                newA[i][j][k] = temp[i][j][k];
-                temp[i][j][k] = 0;
-            }
-
-    //add h to the result and shift to the right 3 bits
-    for (i = 0; i < 16; i++) {
-        for (j = 0; j < 16; j++) {
-            for (k = 0; k < 27; k++) {
-                newA[i][j][k] += 4;
-                newA[i][j][k] %= (1 << 13);
-                newA[i][j][k] >>= l;
-            }
-        }
-    }
-
     //Vec<NTL::ZZ_pX> b;
     //b.SetLength(l);
     
@@ -303,25 +241,13 @@ int main(int argc, char** argv) {
     //return (pk := (seedA, b), s) (seed_A, b_vec, s2)
 
     //****************************ENCRYPTION****************************
-    
-    /**
-    int length = l * l * n * eq / 8;
-    //cout << length << endl;
-    CryptoPP::byte buf3[1536];//1024*12/8 = 1536*8 = 12288 total bits
-    for (int i = 0; i < 1536; i++) {
-        buf3[i] = '0';
-    }
-    //cout << buf3[0] << buf3[length - 1];
+    //******************************STEP 1******************************
+    //A = gen(seedA) ∈ Rl×lq
+    //Same as KeyGen step 2
 
-    //goal: understand byte data type so I can sort them into bits
-    //goal: learn SHAKE-128 syntax to implement alg15 line 2
-    bool bufs[1024][12];//1024*12 = 12288 total bits
-    for (int i = 0; i < 1024; i++) {
-        bufs[i][0]= 0; //placeholder assignment
-    }
-    **/
-
-    //We already have lines 1-3 from previous KeyGen part.
+    //*****************************STEP 2/3*****************************
+    //r = U({0,1}^256)
+    //Same as KeyGen step 3
 
     //******************************STEP 4******************************
     //s′ = βμ(Rl×1q ; r)
@@ -550,32 +476,21 @@ int main(int argc, char** argv) {
         cout << endl;
     }
 
-    /**
-    //testing step 4
-    for (i = 0; i < 16; i++) {
-        for (j = 0; j < 16; j++) {
-            for (k = 0; k < l; k++) {
-                cout << s[i][j][k] << ' ';
-            }
-        }
-        cout << endl;
-    }
-    **/
+    //test s from KeyGen line 4
+    cout << "Testing KeyGen line 4 s vector: " << endl;
+    cout << s2 << endl << endl;
 
-   /**
-   //test results for step 5
-    for (i = 0; i < 16; i++) {
-        for (j = 0; j < 16; j++) {
-            cout << i << ',' << j << ": ";
-            for (k = 34; k > 0; k--) {
-                if (newA[i][j][k])
-                    cout << newA[i][j][k] << "x^" << k - 1 << ' ';
-            }
-            cout << endl;
-        }
-        cout << endl;
-    }
-    **/
+    //test b vector from KeyGen line 5
+    cout << "Testing KeyGen line 5 b vector: " << endl;
+    cout << b_vec << endl << endl;
+
+    //test b prime vector from Encryption line 5
+    cout << "Testing Encryption line 5 b prime vector: " << endl;
+    cout << b_vec_prime << endl << endl;
+
+    //test c_m vector from Encryption line 5
+    cout << "Testing Encryption line 5 c_m: " << endl;
+    cout << c_m << endl << endl;
     
     return 0;
 }
